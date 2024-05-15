@@ -22,4 +22,4 @@ known_actions = ["*.action"]
 known_typing = ["typing", "mypy_extensions", "typing_extensions"]
 force_sort_within_sections = "true"
 force_to_top = "true"
-src_paths = ["ros/**"]
+src_paths = ["clingwrap/**"]
