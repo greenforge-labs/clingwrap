@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>A ROS2 launch wrapper to simplify writing python launch files.</description>
   <maintainer email="info@greenforgelabs.com.au">Alistair English</maintainer>
-  <license>MIT</license>
+  <license>apache2</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
