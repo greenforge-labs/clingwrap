@@ -1,17 +1,34 @@
+from contextlib import contextmanager
+
 from launch import LaunchDescription, SomeSubstitutionsType
 from launch import actions as act
 from launch_ros import actions as ros_act
 from launch_ros.parameters_type import SomeParameterFile, SomeParameterName, SomeParameterValue
 
-from typing import Optional
+from .action_list import ActionList, ActionListImpl
+
+from typing import Generator, Optional
 
 
 class LaunchBuilder(LaunchDescription):
+    _action_list: ActionList
+
     def __init__(self):
+        self._action_list = self
         super().__init__()
 
+    @contextmanager
+    def namespace(self, namespace: str) -> Generator[None, None, None]:
+        previous_action_list = self._action_list
+        self._action_list = ActionListImpl()
+        yield
+        previous_action_list.add_action(
+            act.GroupAction([ros_act.PushRosNamespace(namespace=namespace)] + self._action_list.actions)
+        )
+        self._action_list = previous_action_list
+
     def log(self, msg: SomeSubstitutionsType):
-        self.add_action(act.LogInfo(msg=msg))
+        self._action_list.add_action(act.LogInfo(msg=msg))
 
     def node(
         self,
@@ -36,7 +53,7 @@ class LaunchBuilder(LaunchDescription):
             node_kwargs["emulate_tty"] = True
             node_kwargs["output"] = "screen"
 
-        self.add_action(
+        self._action_list.add_action(
             ros_act.Node(
                 package=package,
                 executable=executable,
