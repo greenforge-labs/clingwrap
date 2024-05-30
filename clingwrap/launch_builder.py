@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from launch import LaunchDescription, SomeSubstitutionsType
+from launch import Action, LaunchDescription, SomeSubstitutionsType
 from launch import actions as act
 from launch import launch_description_sources
 from launch import substitutions as sub
@@ -44,6 +44,10 @@ class LaunchBuilder(LaunchDescription):
     def __init__(self):
         self._action_list = self
         super().__init__()
+
+    @property
+    def actions(self) -> list[Action]:
+        return [e for e in self.entities if isinstance(e, Action)]
 
     def declare_arg(self, name: Text, **arg_kwargs) -> sub.LaunchConfiguration:
         self._action_list.add_action(act.DeclareLaunchArgument(name, **arg_kwargs))
@@ -167,4 +171,15 @@ class LaunchBuilder(LaunchDescription):
                 remappings=generate_remappings_list(remappings),
                 **node_kwargs,
             )
+        )
+
+    def topic_relay(self, from_: str, to: str, lazy: bool = True):
+        friendly_from = from_.replace("/", "_").strip("_")
+        friendly_to = to.replace("/", "_").strip("_")
+
+        self.node(
+            "topic_tools",
+            "relay",
+            name=f"relay_{friendly_from}_{friendly_to}",
+            parameters={"input_topic": from_, "output_topic": to, "lazy": lazy},
         )

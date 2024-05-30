@@ -13,6 +13,7 @@
   <depend>rclpy</depend>
   <depend>launch</depend>
   <depend>launch_ros</depend>
+  <depend>topic_tools</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

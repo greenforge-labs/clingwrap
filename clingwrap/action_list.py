@@ -7,6 +7,10 @@ class ActionList(Protocol):
     def add_action(self, action: Action):
         ...
 
+    @property
+    def actions(self) -> list[Action]:
+        ...
+
 
 class ActionListImpl(ActionList):
     _actions: list[Action]
