@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from launch import Action, LaunchDescription, SomeSubstitutionsType
+from launch import Action, LaunchContext, LaunchDescription, SomeSubstitutionsType
 from launch import actions as act
 from launch import launch_description_sources
 from launch import substitutions as sub
@@ -12,7 +12,7 @@ from launch_ros.remap_rule_type import SomeRemapRules
 from .action_list import ActionList, ActionListImpl
 from .launch_helpers import ContainerType, find_file
 
-from typing import Generator, Optional, Text
+from typing import Callable, Generator, Optional, Text
 
 ComposableNodeList = list[desc.ComposableNode]
 
@@ -61,8 +61,8 @@ class LaunchBuilder(LaunchDescription):
         self,
         package: str,
         launch_file: str,
-        directory: str = "launch",
         launch_arguments: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
+        directory: str = "launch",
         **launch_kwargs,
     ):
         launch_file_path = find_file(package, directory, launch_file)
@@ -183,3 +183,6 @@ class LaunchBuilder(LaunchDescription):
             name=f"relay_{friendly_from}_{friendly_to}",
             parameters={"input_topic": from_, "output_topic": to, "lazy": lazy},
         )
+
+    def opaque_function(self, func: Callable[[LaunchContext], list[Action]]):
+        self._action_list.add_action(act.OpaqueFunction(function=func))

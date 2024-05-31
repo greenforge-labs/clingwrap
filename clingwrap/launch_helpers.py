@@ -1,10 +1,12 @@
 from enum import Enum
 
-from launch import SomeSubstitutionsType
+from launch import Substitution
 from launch import substitutions as sub
 from launch.utilities.type_utils import SomeValueType
 from launch_ros import parameter_descriptions as param
 from launch_ros import substitutions as ros_sub
+
+from typing import Text, Union
 
 
 class ContainerType(Enum):
@@ -24,8 +26,8 @@ class ContainerType(Enum):
 
 def find_file(
     package: str,
-    file_dir: SomeSubstitutionsType,
-    file_name: SomeSubstitutionsType,
+    file_dir: Union[Text, Substitution],
+    file_name: Union[Text, Substitution],
 ) -> sub.PathJoinSubstitution:
     return sub.PathJoinSubstitution([ros_sub.FindPackageShare(package), file_dir, file_name])
 
