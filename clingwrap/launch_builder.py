@@ -6,7 +6,7 @@ from launch import launch_description_sources
 from launch import substitutions as sub
 from launch_ros import actions as ros_act
 from launch_ros import descriptions as desc
-from launch_ros.parameters_type import SomeParameterFile, SomeParameterName, SomeParameters, SomeParameterValue
+from launch_ros.parameters_type import SomeParameterFile, SomeParameters, SomeParametersDict
 from launch_ros.remap_rule_type import SomeRemapRules
 
 from .action_list import ActionList, ActionListImpl
@@ -18,7 +18,7 @@ ComposableNodeList = list[desc.ComposableNode]
 
 
 def generate_parameter_list(
-    parameters: Optional[dict[SomeParameterName, SomeParameterValue]] = None,
+    parameters: Optional[SomeParametersDict] = None,
     parameters_file: Optional[SomeParameterFile] = None,
 ) -> SomeParameters:
     parameters_list = []
@@ -44,6 +44,18 @@ class LaunchBuilder(LaunchDescription):
     def __init__(self):
         self._action_list = self
         super().__init__()
+        self._use_sim_time = self.declare_bool_arg("use_sim_time", default_value=False)
+
+    def _add_sim_time(self, parameters: Optional[dict]) -> dict:
+        if parameters is None:
+            parameters = {}
+
+        parameters["use_sim_time"] = self._use_sim_time
+        return parameters
+
+    @property
+    def use_sim_time(self) -> sub.LaunchConfiguration:
+        return self._use_sim_time
 
     @property
     def actions(self) -> list[Action]:
@@ -53,9 +65,9 @@ class LaunchBuilder(LaunchDescription):
         self._action_list.add_action(act.DeclareLaunchArgument(name, **arg_kwargs))
         return sub.LaunchConfiguration(name)
 
-    def declare_bool_arg(self, name: Text, **arg_kwargs) -> sub.LaunchConfiguration:
+    def declare_bool_arg(self, name: Text, default_value: bool = False, **arg_kwargs) -> sub.LaunchConfiguration:
         arg_kwargs["choices"] = ["true", "false", "True", "False"]
-        return self.declare_arg(name, **arg_kwargs)
+        return self.declare_arg(name, default_value=str(default_value), **arg_kwargs)
 
     def include_launch_py(
         self,
@@ -66,6 +78,9 @@ class LaunchBuilder(LaunchDescription):
         **launch_kwargs,
     ):
         launch_file_path = find_file(package, directory, launch_file)
+
+        launch_arguments = self._add_sim_time(launch_arguments)
+
         launch_arguments_tuple = [(k, v) for k, v in launch_arguments.items()] if launch_arguments is not None else None
 
         self._action_list.add_action(
@@ -75,6 +90,11 @@ class LaunchBuilder(LaunchDescription):
                 **launch_kwargs,
             )
         )
+
+    def include_actions_from_launch_description(self, ld: LaunchDescription):
+        for e in ld.entities:
+            if isinstance(e, Action):
+                self._action_list.add_action(e)
 
     @contextmanager
     def namespace(self, namespace: str) -> Generator[None, None, None]:
@@ -93,7 +113,7 @@ class LaunchBuilder(LaunchDescription):
         self,
         package: str,
         executable: Optional[str] = None,
-        parameters: Optional[dict[SomeParameterName, SomeParameterValue]] = None,
+        parameters: Optional[SomeParametersDict] = None,
         parameters_file: Optional[SomeParameterFile] = None,
         remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
         **node_kwargs,
@@ -105,6 +125,8 @@ class LaunchBuilder(LaunchDescription):
             # https://github.com/ros2/launch/issues/188
             node_kwargs["emulate_tty"] = True
             node_kwargs["output"] = "screen"
+
+        parameters = self._add_sim_time(parameters)
 
         self._action_list.add_action(
             ros_act.Node(
@@ -121,7 +143,7 @@ class LaunchBuilder(LaunchDescription):
         self,
         name: str,
         container_type: ContainerType = ContainerType.SINGLE_THREAD_EACH,
-        parameters: Optional[dict[SomeParameterName, SomeParameterValue]] = None,
+        parameters: Optional[SomeParametersDict] = None,
         parameters_file: Optional[SomeParameterFile] = None,
         remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
         **container_kwargs,
@@ -135,6 +157,8 @@ class LaunchBuilder(LaunchDescription):
 
         executable, args = container_type.value
         container_kwargs["arguments"] = container_kwargs.get("arguments", []) + args
+
+        parameters = self._add_sim_time(parameters)
 
         self._action_list.add_action(
             ros_act.ComposableNodeContainer(
@@ -155,13 +179,15 @@ class LaunchBuilder(LaunchDescription):
         self,
         package: str,
         plugin: str,
-        parameters: Optional[dict[SomeParameterName, SomeParameterValue]] = None,
+        parameters: Optional[SomeParametersDict] = None,
         parameters_file: Optional[SomeParameterFile] = None,
         remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
         **node_kwargs,
     ):
         if self._composable_node_list is None:
             raise ValueError("There is no composable node container in context!")
+
+        parameters = self._add_sim_time(parameters)
 
         self._composable_node_list.append(
             desc.ComposableNode(
