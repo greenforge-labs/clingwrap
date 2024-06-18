@@ -1,6 +1,6 @@
 from enum import Enum
 
-from launch import Substitution
+from launch import SomeSubstitutionsType, Substitution
 from launch import substitutions as sub
 from launch.utilities.type_utils import SomeValueType
 from launch_ros import parameter_descriptions as param
@@ -34,3 +34,16 @@ def find_file(
 
 def as_str_param(value: SomeValueType) -> param.ParameterValue:
     return param.ParameterValue(value, value_type=str)
+
+
+def remap_action(
+    from_: Union[Text, Substitution], to: Union[Text, Substitution]
+) -> dict[SomeSubstitutionsType, SomeSubstitutionsType]:
+    """until https://github.com/ros2/ros2/issues/1312 is fixed"""
+    return {
+        (from_, "/_action/feedback"): (to, "/_action/feedback"),
+        (from_, "/_action/status"): (to, "/_action/status"),
+        (from_, "/_action/cancel_goal"): (to, "/_action/cancel_goal"),
+        (from_, "/_action/get_result"): (to, "/_action/get_result"),
+        (from_, "/_action/send_goal"): [to, "/_action/send_goal"],
+    }
