@@ -24,7 +24,7 @@ class ContainerType(Enum):
     MULTI_THREAD = ("component_container_mt", [])
 
 
-def find_file(
+def pkg_file(
     package: str,
     file_dir: Union[Text, Substitution],
     file_name: Union[Text, Substitution],

@@ -10,7 +10,7 @@ from launch_ros.parameters_type import SomeParameterFile, SomeParameters, SomePa
 from launch_ros.remap_rule_type import SomeRemapRules
 
 from .action_list import ActionList, ActionListImpl
-from .launch_helpers import ContainerType, find_file
+from .launch_helpers import ContainerType, pkg_file
 
 from typing import Callable, Generator, Optional, Text
 
@@ -77,7 +77,7 @@ class LaunchBuilder(LaunchDescription):
         directory: str = "launch",
         **launch_kwargs,
     ):
-        launch_file_path = find_file(package, directory, launch_file)
+        launch_file_path = pkg_file(package, directory, launch_file)
 
         launch_arguments = self._add_sim_time(launch_arguments)
 
