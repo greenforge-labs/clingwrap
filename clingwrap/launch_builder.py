@@ -17,9 +17,6 @@ from typing import Callable, Generator, Optional, Text
 ComposableNodeList = list[desc.ComposableNode]
 
 
-DEBUG_PREFIX = "gdbserver localhost:3000"
-
-
 def generate_parameter_list(
     parameters: Optional[SomeParametersDict] = None,
     parameters_file: Optional[SomeParameterFile] = None,
@@ -119,7 +116,6 @@ class LaunchBuilder(LaunchDescription):
         parameters: Optional[SomeParametersDict] = None,
         parameters_file: Optional[SomeParameterFile] = None,
         remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
-        debug: bool = False,
         **node_kwargs,
     ):
         if executable is None:
@@ -138,7 +134,6 @@ class LaunchBuilder(LaunchDescription):
                 executable=executable,
                 parameters=generate_parameter_list(parameters, parameters_file),
                 remappings=generate_remappings_list(remappings),
-                prefix=DEBUG_PREFIX if debug else None,
                 **node_kwargs,
             )
         )
