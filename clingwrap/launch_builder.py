@@ -10,7 +10,7 @@ from launch_ros.parameters_type import SomeParameterFile, SomeParameters, SomePa
 from launch_ros.remap_rule_type import SomeRemapRules
 
 from .action_list import ActionList, ActionListImpl
-from .launch_helpers import ContainerType, pkg_file
+from .launch_helpers import ContainerType, LogLevel, pkg_file
 
 from typing import Callable, Generator, Optional, Text
 
@@ -116,6 +116,7 @@ class LaunchBuilder(LaunchDescription):
         parameters: Optional[SomeParametersDict] = None,
         parameters_file: Optional[SomeParameterFile] = None,
         remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
+        log_level: Optional[LogLevel] = None,
         **node_kwargs,
     ):
         if executable is None:
@@ -127,6 +128,11 @@ class LaunchBuilder(LaunchDescription):
             node_kwargs["output"] = "screen"
 
         parameters = self._add_sim_time(parameters)
+
+        if log_level is not None:
+            if "ros_arguments" not in node_kwargs:
+                node_kwargs["ros_arguments"] = []
+            node_kwargs["ros_arguments"] += ["--log-level", log_level.value]
 
         self._action_list.add_action(
             ros_act.Node(

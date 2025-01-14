@@ -24,6 +24,15 @@ class ContainerType(Enum):
     MULTI_THREAD = ("component_container_mt", [])
 
 
+class LogLevel(Enum):
+    DEBUG = "debug"
+    INFO = "info"
+    WARN = "warn"
+    ERROR = "error"
+    FATAL = "fatal"
+    NONE = "none"
+
+
 def pkg_file(
     package: str,
     file_dir: Union[Text, Substitution],
