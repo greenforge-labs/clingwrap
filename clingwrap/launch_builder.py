@@ -37,6 +37,14 @@ def generate_remappings_list(
     return []
 
 
+def add_log_level(kwargs: dict, log_level: Optional[LogLevel]) -> dict:
+    if log_level is not None:
+        if "ros_arguments" not in kwargs:
+            kwargs["ros_arguments"] = []
+        kwargs["ros_arguments"] += ["--log-level", log_level.value]
+    return kwargs
+
+
 class LaunchBuilder(LaunchDescription):
     _action_list: ActionList
     _composable_node_list: Optional[ComposableNodeList] = None
@@ -128,11 +136,7 @@ class LaunchBuilder(LaunchDescription):
             node_kwargs["output"] = "screen"
 
         parameters = self._add_sim_time(parameters)
-
-        if log_level is not None:
-            if "ros_arguments" not in node_kwargs:
-                node_kwargs["ros_arguments"] = []
-            node_kwargs["ros_arguments"] += ["--log-level", log_level.value]
+        node_kwargs = add_log_level(node_kwargs, log_level)
 
         self._action_list.add_action(
             ros_act.Node(
@@ -152,6 +156,7 @@ class LaunchBuilder(LaunchDescription):
         parameters: Optional[SomeParametersDict] = None,
         parameters_file: Optional[SomeParameterFile] = None,
         remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
+        log_level: Optional[LogLevel] = None,
         **container_kwargs,
     ) -> Generator[None, None, None]:
         if self._composable_node_list is not None:
@@ -165,6 +170,7 @@ class LaunchBuilder(LaunchDescription):
         container_kwargs["arguments"] = container_kwargs.get("arguments", []) + args
 
         parameters = self._add_sim_time(parameters)
+        container_kwargs = add_log_level(container_kwargs, log_level)
 
         self._action_list.add_action(
             ros_act.ComposableNodeContainer(
