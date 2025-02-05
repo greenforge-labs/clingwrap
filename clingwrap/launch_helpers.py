@@ -56,3 +56,7 @@ def remap_action(
         (from_, "/_action/get_result"): (to, "/_action/get_result"),
         (from_, "/_action/send_goal"): [to, "/_action/send_goal"],
     }
+
+
+def remap_hidden(topic: str) -> dict[str, str]:
+    return {topic: f"_hidden_{topic.strip('/')}"}
