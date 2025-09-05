@@ -30,7 +30,7 @@ def generate_parameter_list(
 
 
 def generate_remappings_list(
-    remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None
+    remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
 ) -> SomeRemapRules:
     if remappings is not None:
         return list(remappings.items())
@@ -68,6 +68,10 @@ class LaunchBuilder(LaunchDescription):
     @property
     def actions(self) -> list[Action]:
         return [e for e in self.entities if isinstance(e, Action)]
+
+    @property
+    def in_composable_node_context(self) -> bool:
+        return self._composable_node_list is not None
 
     def declare_arg(self, name: Text, **arg_kwargs) -> sub.LaunchConfiguration:
         self._action_list.add_action(act.DeclareLaunchArgument(name, **arg_kwargs))
@@ -196,7 +200,7 @@ class LaunchBuilder(LaunchDescription):
         remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
         **node_kwargs,
     ):
-        if self._composable_node_list is None:
+        if not self.in_composable_node_context:
             raise ValueError("There is no composable node container in context!")
 
         parameters = self._add_sim_time(parameters)
@@ -215,12 +219,44 @@ class LaunchBuilder(LaunchDescription):
         friendly_from = from_.replace("/", "_").strip("_")
         friendly_to = to.replace("/", "_").strip("_")
 
-        self.node(
-            "topic_tools",
-            "relay",
-            name=f"relay_{friendly_from}_{friendly_to}",
-            parameters={"input_topic": from_, "output_topic": to, "lazy": lazy},
-        )
+        def create_node():
+            self.composable_node(
+                "topic_tools",
+                "topic_tools::RelayNode",
+                name=f"relay_{friendly_from}_{friendly_to}",
+                parameters={"input_topic": from_, "output_topic": to, "lazy": lazy},
+            )
+
+        if self.in_composable_node_context:
+            create_node()
+        else:
+            with self.composable_node_container(f"container_relay_{friendly_from}_{friendly_to}"):
+                create_node()
+
+    def topic_throttle_hz(self, topic: str, rate: float, lazy: bool = True):
+        friendly_topic = topic.replace("/", "_").strip("_")
+        friendly_rate = str(rate).replace(".", "_")
+
+        def create_node():
+            self.composable_node(
+                "topic_tools",
+                "topic_tools::ThrottleNode",
+                name=f"throttle_{friendly_topic}_{friendly_rate}_hz",
+                parameters={
+                    "input_topic": topic,
+                    "output_topic": topic + f"/throttled/hz_{friendly_rate}",
+                    "lazy": lazy,
+                    "throttle_type": "messages",
+                    "msgs_per_sec": float(rate),
+                    "window": 1.0,
+                },
+            )
+
+        if self.in_composable_node_context:
+            create_node()
+        else:
+            with self.composable_node_container(f"container_throttle_{friendly_topic}_{friendly_rate}_hz"):
+                create_node()
 
     def opaque_function(self, func: Callable[[LaunchContext], list[Action]]):
         self._action_list.add_action(act.OpaqueFunction(function=func))
