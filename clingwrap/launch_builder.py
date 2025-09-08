@@ -233,9 +233,11 @@ class LaunchBuilder(LaunchDescription):
             with self.composable_node_container(f"container_relay_{friendly_from}_{friendly_to}"):
                 create_node()
 
-    def topic_throttle_hz(self, topic: str, rate: float, lazy: bool = True):
+    def topic_throttle_hz(self, topic: str, rate: float, lazy: bool = True, include_hz_in_output_topic: bool = False):
         friendly_topic = topic.replace("/", "_").strip("_")
         friendly_rate = str(rate).replace(".", "_")
+
+        output_topic = topic + f"/throttled" + ("/hz_{friendly_rate}" if include_hz_in_output_topic else "")
 
         def create_node():
             self.composable_node(
@@ -244,7 +246,7 @@ class LaunchBuilder(LaunchDescription):
                 name=f"throttle_{friendly_topic}_{friendly_rate}_hz",
                 parameters={
                     "input_topic": topic,
-                    "output_topic": topic + f"/throttled/hz_{friendly_rate}",
+                    "output_topic": output_topic,
                     "lazy": lazy,
                     "throttle_type": "messages",
                     "msgs_per_sec": float(rate),
