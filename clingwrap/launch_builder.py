@@ -248,7 +248,6 @@ class LaunchBuilder(LaunchDescription):
                     "lazy": lazy,
                     "throttle_type": "messages",
                     "msgs_per_sec": float(rate),
-                    "window": 1.0,
                 },
             )
 
