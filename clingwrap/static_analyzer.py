@@ -64,16 +64,21 @@ class LaunchStaticAnalyzer:
             executable: Container executable (e.g., "component_container")
             parameters: Parameter list
             remappings: Remapping list
-            **kwargs: Additional container arguments
+            **kwargs: Additional container arguments (including optional namespace)
         """
         if self._container_context_nodes is None:
             raise ValueError("Not in a container context!")
+
+        # Extract namespace if explicitly provided, otherwise use current namespace from stack
+        namespace = kwargs.pop("namespace", None)
+        if namespace is None or namespace == "":
+            namespace = self.get_current_namespace()
 
         # Create ComposableNodeContainerInfo with the accumulated composable nodes
         self._tracked_composable_node_containers.append(
             ComposableNodeContainerInfo(
                 name=name,
-                namespace=self.get_current_namespace(),
+                namespace=namespace,
                 package="rclcpp_components",
                 executable=executable,
                 parameters=parameters,

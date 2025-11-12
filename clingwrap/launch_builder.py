@@ -208,13 +208,17 @@ class LaunchBuilder(LaunchDescription):
         parameters = self._add_sim_time(parameters)
         container_kwargs = add_log_level(container_kwargs, log_level)
 
+        # Extract namespace from container_kwargs
+        namespace = container_kwargs.pop("namespace", "")
+
         # Track container for static analysis
         self._static_analyzer.exit_container_context(
             name=name,
             executable=executable,
             parameters=list(generate_parameter_list(parameters, parameters_file)),
             remappings=list(generate_remappings_list(remappings)),
-            **{k: v for k, v in container_kwargs.items() if k not in ["namespace", "arguments", "ros_arguments"]},
+            namespace=namespace,
+            **{k: v for k, v in container_kwargs.items() if k not in ["arguments", "ros_arguments"]},
         )
 
         self._action_list.add_action(
@@ -222,7 +226,7 @@ class LaunchBuilder(LaunchDescription):
                 package="rclcpp_components",
                 executable=executable,
                 name=name,
-                namespace="",
+                namespace=namespace,
                 composable_node_descriptions=self._composable_node_list,
                 parameters=generate_parameter_list(parameters, parameters_file),
                 remappings=generate_remappings_list(remappings),
