@@ -1,5 +1,8 @@
 """Static analysis for ROS2 launch files."""
 
+from launch import SomeSubstitutionsType
+from launch_ros.parameters_type import SomeParameterFile, SomeParametersDict
+
 from .static_info import (
     ComposableNodeContainerInfo,
     ComposableNodeInfo,
@@ -55,15 +58,24 @@ class LaunchStaticAnalyzer:
             raise ValueError("Already in a container context!")
         self._container_context_nodes = []
 
-    def exit_container_context(self, name: str, executable: str, parameters: list, remappings: list, **kwargs) -> None:
+    def exit_container_context(
+        self,
+        name: str,
+        executable: str,
+        parameters: Optional[SomeParametersDict],
+        parameters_file: Optional[SomeParameterFile],
+        remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]],
+        **kwargs,
+    ) -> None:
         """
         Finish tracking a container and create ComposableNodeContainerInfo.
 
         Args:
             name: Container name
             executable: Container executable (e.g., "component_container")
-            parameters: Parameter list
-            remappings: Remapping list
+            parameters: Parameters dict
+            parameters_file: Parameters file path
+            remappings: Remappings dict
             **kwargs: Additional container arguments (including optional namespace)
         """
         if self._container_context_nodes is None:
@@ -82,6 +94,7 @@ class LaunchStaticAnalyzer:
                 package="rclcpp_components",
                 executable=executable,
                 parameters=parameters,
+                parameters_file=parameters_file,
                 remappings=remappings,
                 nodes=self._container_context_nodes.copy(),
                 additional_kwargs=kwargs,
@@ -92,7 +105,14 @@ class LaunchStaticAnalyzer:
         self._container_context_nodes = None
 
     def track_node(
-        self, package: str, executable: str, parameters: list, remappings: list, name: Optional[str] = None, **kwargs
+        self,
+        package: str,
+        executable: str,
+        parameters: Optional[SomeParametersDict],
+        parameters_file: Optional[SomeParameterFile],
+        remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]],
+        name: Optional[str] = None,
+        **kwargs,
     ) -> None:
         """
         Track a regular ROS2 node.
@@ -106,13 +126,21 @@ class LaunchStaticAnalyzer:
                 name=name,
                 namespace=self.get_current_namespace(),
                 parameters=parameters,
+                parameters_file=parameters_file,
                 remappings=remappings,
                 additional_kwargs=kwargs,
             )
         )
 
     def track_composable_node(
-        self, package: str, plugin: str, parameters: list, remappings: list, name: Optional[str] = None, **kwargs
+        self,
+        package: str,
+        plugin: str,
+        parameters: Optional[SomeParametersDict],
+        parameters_file: Optional[SomeParameterFile],
+        remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]],
+        name: Optional[str] = None,
+        **kwargs,
     ) -> None:
         """
         Track a composable node.
@@ -129,6 +157,7 @@ class LaunchStaticAnalyzer:
             name=name,
             namespace=self.get_current_namespace(),
             parameters=parameters,
+            parameters_file=parameters_file,
             remappings=remappings,
             additional_kwargs=kwargs,
         )
@@ -171,7 +200,7 @@ class LaunchStaticAnalyzer:
         package: str,
         launch_file: str,
         directory: str = "launch",
-        launch_arguments: Optional[dict] = None,
+        launch_arguments: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
     ) -> None:
         """
         Track an included launch file.

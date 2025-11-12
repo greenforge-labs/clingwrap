@@ -61,16 +61,16 @@ def test_basic_node():
     assert node.namespace is None
 
     # Check parameters
-    assert len(node.parameters) == 1
-    params_dict = node.parameters[0]
-    assert params_dict["param1"] == "value1"
-    assert params_dict["param2"] == 42
+    assert node.parameters is not None
+    assert node.parameters["param1"] == "value1"
+    assert node.parameters["param2"] == 42
+    assert node.parameters_file is None
 
     # Check remappings
+    assert node.remappings is not None
     assert len(node.remappings) == 2
-    remappings_dict = {k: v for k, v in node.remappings}
-    assert remappings_dict["/input"] == "/remapped_input"
-    assert remappings_dict["/output"] == "/remapped_output"
+    assert node.remappings["/input"] == "/remapped_input"
+    assert node.remappings["/output"] == "/remapped_output"
 
     # Should have no composable nodes, containers, relays, or includes
     assert len(static_info.composable_node_containers) == 0
@@ -135,14 +135,15 @@ def test_composable_nodes():
     assert camera_node.namespace is None
 
     # Check camera parameters
-    assert len(camera_node.parameters) == 1
-    camera_params = camera_node.parameters[0]
-    assert camera_params["fps"] == 30
-    assert camera_params["resolution"] == "1920x1080"
+    assert camera_node.parameters is not None
+    assert camera_node.parameters["fps"] == 30
+    assert camera_node.parameters["resolution"] == "1920x1080"
+    assert camera_node.parameters_file is None
 
     # Check camera remappings
+    assert camera_node.remappings is not None
     assert len(camera_node.remappings) == 1
-    assert camera_node.remappings[0] == ("/image_raw", "/camera/image_raw")
+    assert camera_node.remappings["/image_raw"] == "/camera/image_raw"
 
     # Check second composable node (processor)
     processor_node = container.nodes[1]
@@ -152,9 +153,9 @@ def test_composable_nodes():
     assert processor_node.namespace is None
 
     # Check processor parameters
-    assert len(processor_node.parameters) == 1
-    processor_params = processor_node.parameters[0]
-    assert processor_params["algorithm"] == "edge_detection"
+    assert processor_node.parameters is not None
+    assert processor_node.parameters["algorithm"] == "edge_detection"
+    assert processor_node.parameters_file is None
 
     # Check get_all_composable_nodes helper
     all_composable = static_info.get_all_composable_nodes()

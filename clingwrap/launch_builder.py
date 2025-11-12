@@ -165,8 +165,9 @@ class LaunchBuilder(LaunchDescription):
         self._static_analyzer.track_node(
             package=package,
             executable=executable,
-            parameters=list(generate_parameter_list(parameters, parameters_file)),
-            remappings=list(generate_remappings_list(remappings)),
+            parameters=parameters,
+            parameters_file=parameters_file,
+            remappings=remappings,
             name=node_kwargs.get("name"),
             **{k: v for k, v in node_kwargs.items() if k not in ["name", "namespace"]},
         )
@@ -215,8 +216,9 @@ class LaunchBuilder(LaunchDescription):
         self._static_analyzer.exit_container_context(
             name=name,
             executable=executable,
-            parameters=list(generate_parameter_list(parameters, parameters_file)),
-            remappings=list(generate_remappings_list(remappings)),
+            parameters=parameters,
+            parameters_file=parameters_file,
+            remappings=remappings,
             namespace=namespace,
             **{k: v for k, v in container_kwargs.items() if k not in ["arguments", "ros_arguments"]},
         )
@@ -254,8 +256,9 @@ class LaunchBuilder(LaunchDescription):
         self._static_analyzer.track_composable_node(
             package=package,
             plugin=plugin,
-            parameters=list(generate_parameter_list(parameters, parameters_file)),
-            remappings=list(generate_remappings_list(remappings)),
+            parameters=parameters,
+            parameters_file=parameters_file,
+            remappings=remappings,
             name=node_kwargs.get("name"),
             **{k: v for k, v in node_kwargs.items() if k not in ["name", "namespace"]},
         )

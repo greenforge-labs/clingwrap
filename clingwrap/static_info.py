@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass, field
 
+from launch import SomeSubstitutionsType
+from launch_ros.parameters_type import SomeParameterFile, SomeParametersDict
+
 from typing import Any, Optional
 
 
@@ -9,12 +12,13 @@ from typing import Any, Optional
 class NodeInfo:
     """Information about a regular ROS2 node."""
 
-    package: Any  # str or Substitution
-    executable: Any  # str or Substitution
-    name: Optional[Any] = None  # str or Substitution
-    namespace: Optional[Any] = None  # str or Substitution
-    parameters: list[Any] = field(default_factory=list)  # list of dicts/paths/Substitutions
-    remappings: list[tuple[Any, Any]] = field(default_factory=list)  # list of tuples
+    package: str
+    executable: str
+    name: Optional[str] = None
+    namespace: Optional[str] = None
+    parameters: Optional[SomeParametersDict] = None
+    parameters_file: Optional[SomeParameterFile] = None
+    remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None
     additional_kwargs: dict[str, Any] = field(default_factory=dict)
 
 
@@ -22,12 +26,13 @@ class NodeInfo:
 class ComposableNodeInfo:
     """Information about a composable ROS2 node."""
 
-    package: Any  # str or Substitution
-    plugin: str  # Full class name like "package::ClassName"
-    name: Optional[Any] = None  # str or Substitution
-    namespace: Optional[Any] = None  # str or Substitution
-    parameters: list[Any] = field(default_factory=list)  # list of dicts/paths/Substitutions
-    remappings: list[tuple[Any, Any]] = field(default_factory=list)  # list of tuples
+    package: str
+    plugin: str
+    name: Optional[str] = None
+    namespace: Optional[str] = None
+    parameters: Optional[SomeParametersDict] = None
+    parameters_file: Optional[SomeParameterFile] = None
+    remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None
     additional_kwargs: dict[str, Any] = field(default_factory=dict)
 
 
@@ -39,8 +44,9 @@ class ComposableNodeContainerInfo:
     namespace: Optional[str] = None
     package: str = "rclcpp_components"
     executable: str = "component_container"  # or component_container_mt, component_container_isolated
-    parameters: list[Any] = field(default_factory=list)
-    remappings: list[tuple[Any, Any]] = field(default_factory=list)
+    parameters: Optional[SomeParametersDict] = None
+    parameters_file: Optional[SomeParameterFile] = None
+    remappings: Optional[dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None
     nodes: list[ComposableNodeInfo] = field(default_factory=list)
     additional_kwargs: dict[str, Any] = field(default_factory=dict)
 
@@ -55,18 +61,18 @@ class TopicRelayInfo:
     lazy: bool = False
     # For throttle:
     rate: Optional[float] = None
-    namespace: Optional[Any] = None
+    namespace: Optional[str] = None
 
 
 @dataclass
 class LaunchFileInclude:
     """Information about an included launch file."""
 
-    package: Optional[Any] = None  # str or Substitution (if using package)
-    launch_file: Any = None  # str or Substitution
-    directory: Optional[Any] = None  # str or Substitution (if using directory instead of package)
-    launch_arguments: dict[str, Any] = field(default_factory=dict)
-    namespace: Optional[str] = None  # Namespace context when included
+    package: str
+    launch_file: str
+    directory: str
+    launch_arguments: dict[SomeSubstitutionsType, SomeSubstitutionsType] = field(default_factory=dict)
+    namespace: Optional[str] = None
 
 
 @dataclass
