@@ -11,6 +11,8 @@ from launch_ros.remap_rule_type import SomeRemapRules
 
 from .action_list import ActionList, ActionListImpl
 from .launch_helpers import ContainerType, LogLevel, pkg_file
+from .static_analyzer import LaunchStaticAnalyzer
+from .static_info import StaticInformation
 
 from typing import Callable, Generator, Optional, Text
 
@@ -53,6 +55,7 @@ class LaunchBuilder(LaunchDescription):
         self._action_list = self
         super().__init__()
         self._use_sim_time = self.declare_bool_arg("use_sim_time", default_value=False)
+        self._static_analyzer = LaunchStaticAnalyzer()
 
     def _add_sim_time(self, parameters: Optional[dict]) -> dict:
         if parameters is None:
@@ -95,6 +98,14 @@ class LaunchBuilder(LaunchDescription):
 
         launch_arguments_tuple = [(k, v) for k, v in launch_arguments.items()] if launch_arguments is not None else None
 
+        # Track the included launch file for static analysis
+        self._static_analyzer.track_included_launch_file(
+            package=package,
+            launch_file=launch_file,
+            directory=directory,
+            launch_arguments=launch_arguments if launch_arguments else {},  # type: ignore
+        )
+
         self._action_list.add_action(
             act.IncludeLaunchDescription(
                 launch_description_sources.PythonLaunchDescriptionSource(launch_file_path),
@@ -112,7 +123,15 @@ class LaunchBuilder(LaunchDescription):
     def namespace(self, namespace: str) -> Generator[None, None, None]:
         previous_action_list = self._action_list
         self._action_list = ActionListImpl()
+
+        # Push namespace for static analysis
+        self._static_analyzer.push_namespace(namespace)
+
         yield
+
+        # Pop namespace when exiting context
+        self._static_analyzer.pop_namespace()
+
         previous_action_list.add_action(
             act.GroupAction([ros_act.PushRosNamespace(namespace=namespace)] + self._action_list.actions)
         )
@@ -142,6 +161,16 @@ class LaunchBuilder(LaunchDescription):
         parameters = self._add_sim_time(parameters)
         node_kwargs = add_log_level(node_kwargs, log_level)
 
+        # Track node for static analysis
+        self._static_analyzer.track_node(
+            package=package,
+            executable=executable,
+            parameters=list(generate_parameter_list(parameters, parameters_file)),
+            remappings=list(generate_remappings_list(remappings)),
+            name=node_kwargs.get("name"),
+            **{k: v for k, v in node_kwargs.items() if k not in ["name", "namespace"]},
+        )
+
         self._action_list.add_action(
             ros_act.Node(
                 package=package,
@@ -168,6 +197,9 @@ class LaunchBuilder(LaunchDescription):
 
         self._composable_node_list = []
 
+        # Start static analysis container context
+        self._static_analyzer.enter_container_context()
+
         yield
 
         executable, args = container_type.value
@@ -175,6 +207,15 @@ class LaunchBuilder(LaunchDescription):
 
         parameters = self._add_sim_time(parameters)
         container_kwargs = add_log_level(container_kwargs, log_level)
+
+        # Track container for static analysis
+        self._static_analyzer.exit_container_context(
+            name=name,
+            executable=executable,
+            parameters=list(generate_parameter_list(parameters, parameters_file)),
+            remappings=list(generate_remappings_list(remappings)),
+            **{k: v for k, v in container_kwargs.items() if k not in ["namespace", "arguments", "ros_arguments"]},
+        )
 
         self._action_list.add_action(
             ros_act.ComposableNodeContainer(
@@ -205,6 +246,16 @@ class LaunchBuilder(LaunchDescription):
 
         parameters = self._add_sim_time(parameters)
 
+        # Track composable node for static analysis
+        self._static_analyzer.track_composable_node(
+            package=package,
+            plugin=plugin,
+            parameters=list(generate_parameter_list(parameters, parameters_file)),
+            remappings=list(generate_remappings_list(remappings)),
+            name=node_kwargs.get("name"),
+            **{k: v for k, v in node_kwargs.items() if k not in ["name", "namespace"]},
+        )
+
         self._composable_node_list.append(
             desc.ComposableNode(
                 package=package,
@@ -218,6 +269,14 @@ class LaunchBuilder(LaunchDescription):
     def topic_relay(self, from_: str, to: str, lazy: bool = True):
         friendly_from = from_.replace("/", "_").strip("_")
         friendly_to = to.replace("/", "_").strip("_")
+
+        # Track topic relay for static analysis
+        self._static_analyzer.track_topic_relay(
+            from_topic=from_,
+            to_topic=to,
+            relay_type="relay",
+            lazy=lazy,
+        )
 
         def create_node():
             self.composable_node(
@@ -238,6 +297,15 @@ class LaunchBuilder(LaunchDescription):
         friendly_rate = str(rate).replace(".", "_")
 
         output_topic = topic + f"/throttled" + ("/hz_{friendly_rate}" if include_hz_in_output_topic else "")
+
+        # Track topic throttle for static analysis
+        self._static_analyzer.track_topic_relay(
+            from_topic=topic,
+            to_topic=output_topic,
+            relay_type="throttle",
+            lazy=lazy,
+            rate=rate,
+        )
 
         def create_node():
             self.composable_node(
@@ -261,3 +329,12 @@ class LaunchBuilder(LaunchDescription):
 
     def opaque_function(self, func: Callable[[LaunchContext], list[Action]]):
         self._action_list.add_action(act.OpaqueFunction(function=func))
+
+    def get_static_information(self) -> StaticInformation:
+        """
+        Get all static information collected from this launch file.
+
+        Returns a StaticInformation object containing all tracked nodes,
+        containers (with nested composable nodes), topic relays, and included launch files.
+        """
+        return self._static_analyzer.get_static_information()
