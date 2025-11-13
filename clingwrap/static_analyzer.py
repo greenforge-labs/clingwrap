@@ -37,7 +37,18 @@ class LaunchStaticAnalyzer:
 
     def get_current_namespace(self) -> Optional[str]:
         """Get the current namespace from the stack, or None if empty."""
-        return "/".join(self._namespace_stack) if self._namespace_stack else None
+        if not self._namespace_stack:
+            return None
+
+        # Find the last global namespace (starting with '/')
+        # Global namespaces replace the entire context, so we ignore everything before them
+        start_index = 0
+        for i in range(len(self._namespace_stack) - 1, -1, -1):
+            if self._namespace_stack[i].startswith("/"):
+                start_index = i
+                break
+
+        return "/".join(self._namespace_stack[start_index:])
 
     def push_namespace(self, namespace: str) -> None:
         """Enter a namespace context."""

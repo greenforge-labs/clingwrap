@@ -96,7 +96,7 @@ class StaticInformation:
             result.extend(container.nodes)
         return result
 
-    def merge(self, other: "StaticInformation", namespace_prefix: Optional[str] = None) -> None:
+    def merge(self, other: "StaticInformation") -> None:
         """
         Merge another StaticInformation into this one.
 
@@ -104,7 +104,6 @@ class StaticInformation:
             other: The StaticInformation to merge
             namespace_prefix: Optional namespace to prepend to all entities from other
         """
-        # TODO: Apply namespace_prefix if provided (would need to handle Substitutions carefully)
         self.nodes.extend(other.nodes)
         self.composable_node_containers.extend(other.composable_node_containers)
         self.topic_relays.extend(other.topic_relays)

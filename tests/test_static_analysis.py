@@ -272,3 +272,41 @@ def test_included_launch_files():
     # use_sim_time is automatically added to launch arguments
     assert "use_sim_time" in include2.launch_arguments
     assert include2.namespace == "included_ns"
+
+
+def test_global_namespaces():
+    """Test static analysis of nodes with global (absolute) namespaces."""
+    static_info: StaticInformation = get_static_info(get_launch_file_path("global_namespaces.launch.py"))
+
+    # Should have exactly 6 nodes
+    assert len(static_info.nodes) == 6
+
+    # Node in global namespace /robot1
+    robot1_node = static_info.nodes[0]
+    assert robot1_node.name == "robot1_node"
+    assert robot1_node.namespace == "/robot1"
+
+    # Node in /robot2/sensors (global + relative)
+    robot2_sensor = static_info.nodes[1]
+    assert robot2_sensor.name == "robot2_sensor"
+    assert robot2_sensor.namespace == "/robot2/sensors"
+
+    # Node in relative_ns (before global namespace override)
+    relative_node = static_info.nodes[2]
+    assert relative_node.name == "relative_node"
+    assert relative_node.namespace == "relative_ns"
+
+    # Node in /robot3 (global namespace replaces previous relative_ns)
+    robot3_node = static_info.nodes[3]
+    assert robot3_node.name == "robot3_node"
+    assert robot3_node.namespace == "/robot3"
+
+    # Node in /robot3/camera (global + relative, ignoring previous relative_ns)
+    robot3_camera = static_info.nodes[4]
+    assert robot3_camera.name == "robot3_camera"
+    assert robot3_camera.namespace == "/robot3/camera"
+
+    # Node in /robot5/actuators (last global /robot5 replaces /robot4/sensors)
+    robot5_actuator = static_info.nodes[5]
+    assert robot5_actuator.name == "robot5_actuator"
+    assert robot5_actuator.namespace == "/robot5/actuators"
