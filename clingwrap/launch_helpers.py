@@ -55,6 +55,7 @@ def remap_action(
         (from_, "/_action/cancel_goal"): (to, "/_action/cancel_goal"),
         (from_, "/_action/get_result"): (to, "/_action/get_result"),
         (from_, "/_action/send_goal"): [to, "/_action/send_goal"],
+        from_: to,
     }
 
 
