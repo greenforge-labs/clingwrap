@@ -72,9 +72,8 @@ def test_basic_node():
     assert node.remappings["/input"] == "/remapped_input"
     assert node.remappings["/output"] == "/remapped_output"
 
-    # Should have no composable nodes, containers, relays, or includes
+    # Should have no composable nodes, containers, or includes
     assert len(static_info.composable_node_containers) == 0
-    assert len(static_info.topic_relays) == 0
     assert len(static_info.included_launch_files) == 0
 
 
@@ -163,46 +162,9 @@ def test_composable_nodes():
     assert all_composable[0] == camera_node
     assert all_composable[1] == processor_node
 
-    # Should have no regular nodes, relays, or includes
+    # Should have no regular nodes or includes
     assert len(static_info.nodes) == 0
-    assert len(static_info.topic_relays) == 0
     assert len(static_info.included_launch_files) == 0
-
-
-def test_topic_relays():
-    """Test static analysis of topic relays and throttles."""
-    static_info: StaticInformation = get_static_info(get_launch_file_path("topic_relays.launch.py"))
-
-    # Should have 3 topic relays (2 relays + 1 throttle)
-    assert len(static_info.topic_relays) == 3
-
-    # Regular relay
-    relay1 = static_info.topic_relays[0]
-    assert relay1.from_topic == "/input/camera"
-    assert relay1.to_topic == "/output/camera"
-    assert relay1.relay_type == "relay"
-    assert relay1.lazy is True
-    assert relay1.namespace is None
-
-    # Throttle
-    throttle = static_info.topic_relays[1]
-    assert throttle.from_topic == "/sensors/lidar"
-    assert throttle.to_topic == "/sensors/lidar/throttled"
-    assert throttle.relay_type == "throttle"
-    assert throttle.lazy is False
-    assert throttle.rate == 10.0
-    assert throttle.namespace is None
-
-    # Relay in namespace
-    relay2 = static_info.topic_relays[2]
-    assert relay2.from_topic == "/cmd_vel"
-    assert relay2.to_topic == "/cmd_vel_safe"
-    assert relay2.relay_type == "relay"
-    assert relay2.lazy is False
-    assert relay2.namespace == "robot1"
-
-    # Topic relays create composable nodes, so we should have containers
-    assert len(static_info.composable_node_containers) == 3
 
 
 def test_nested_namespaces():

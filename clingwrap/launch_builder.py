@@ -277,14 +277,6 @@ class LaunchBuilder(LaunchDescription):
         friendly_from = from_.replace("/", "_").strip("_")
         friendly_to = to.replace("/", "_").strip("_")
 
-        # Track topic relay for static analysis
-        self._static_analyzer.track_topic_relay(
-            from_topic=from_,
-            to_topic=to,
-            relay_type="relay",
-            lazy=lazy,
-        )
-
         def create_node():
             self.composable_node(
                 "topic_tools",
@@ -312,15 +304,6 @@ class LaunchBuilder(LaunchDescription):
         friendly_rate = str(rate).replace(".", "_")
 
         output_topic = topic + f"/throttled" + ("/hz_{friendly_rate}" if include_hz_in_output_topic else "")
-
-        # Track topic throttle for static analysis
-        self._static_analyzer.track_topic_relay(
-            from_topic=topic,
-            to_topic=output_topic,
-            relay_type="throttle",
-            lazy=lazy,
-            rate=rate,
-        )
 
         def create_node():
             self.composable_node(

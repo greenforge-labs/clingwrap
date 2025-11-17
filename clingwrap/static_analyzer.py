@@ -3,14 +3,7 @@
 from launch import SomeSubstitutionsType
 from launch_ros.parameters_type import SomeParameterFile, SomeParametersDict
 
-from .static_info import (
-    ComposableNodeContainerInfo,
-    ComposableNodeInfo,
-    LaunchFileInclude,
-    NodeInfo,
-    StaticInformation,
-    TopicRelayInfo,
-)
+from .static_info import ComposableNodeContainerInfo, ComposableNodeInfo, LaunchFileInclude, NodeInfo, StaticInformation
 
 from typing import Optional
 
@@ -28,7 +21,6 @@ class LaunchStaticAnalyzer:
         # Tracking state
         self._tracked_nodes: list[NodeInfo] = []
         self._tracked_composable_node_containers: list[ComposableNodeContainerInfo] = []
-        self._tracked_topic_relays: list[TopicRelayInfo] = []
         self._tracked_included_launch_files: list[LaunchFileInclude] = []
 
         # Context tracking
@@ -175,37 +167,6 @@ class LaunchStaticAnalyzer:
 
         self._container_context_nodes.append(composable_node)  # type: ignore
 
-    def track_topic_relay(
-        self,
-        from_topic: str,
-        to_topic: str,
-        relay_type: str = "relay",
-        lazy: bool = True,
-        rate: Optional[float] = None,
-    ) -> None:
-        """
-        Track a topic relay or throttle.
-
-        Automatically uses the current namespace context.
-
-        Args:
-            from_topic: Source topic
-            to_topic: Destination topic
-            relay_type: "relay" or "throttle"
-            lazy: Whether the relay is lazy
-            rate: Throttle rate in Hz (for throttle type)
-        """
-        self._tracked_topic_relays.append(
-            TopicRelayInfo(
-                from_topic=from_topic,
-                to_topic=to_topic,
-                relay_type=relay_type,
-                lazy=lazy,
-                rate=rate,
-                namespace=self.get_current_namespace(),
-            )
-        )
-
     def track_included_launch_file(
         self,
         package: str,
@@ -244,6 +205,5 @@ class LaunchStaticAnalyzer:
         return StaticInformation(
             nodes=self._tracked_nodes.copy(),
             composable_node_containers=self._tracked_composable_node_containers.copy(),
-            topic_relays=self._tracked_topic_relays.copy(),
             included_launch_files=self._tracked_included_launch_files.copy(),
         )

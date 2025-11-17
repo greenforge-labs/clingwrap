@@ -52,19 +52,6 @@ class ComposableNodeContainerInfo:
 
 
 @dataclass
-class TopicRelayInfo:
-    """Information about a topic relay."""
-
-    from_topic: str
-    to_topic: str
-    relay_type: str = "relay"  # "relay" or "throttle"
-    lazy: bool = False
-    # For throttle:
-    rate: Optional[float] = None
-    namespace: Optional[str] = None
-
-
-@dataclass
 class LaunchFileInclude:
     """Information about an included launch file."""
 
@@ -81,7 +68,6 @@ class StaticInformation:
 
     nodes: list[NodeInfo] = field(default_factory=list)
     composable_node_containers: list[ComposableNodeContainerInfo] = field(default_factory=list)
-    topic_relays: list[TopicRelayInfo] = field(default_factory=list)
     included_launch_files: list[LaunchFileInclude] = field(default_factory=list)
 
     def get_all_composable_nodes(self) -> list[ComposableNodeInfo]:
@@ -106,5 +92,4 @@ class StaticInformation:
         """
         self.nodes.extend(other.nodes)
         self.composable_node_containers.extend(other.composable_node_containers)
-        self.topic_relays.extend(other.topic_relays)
         self.included_launch_files.extend(other.included_launch_files)
