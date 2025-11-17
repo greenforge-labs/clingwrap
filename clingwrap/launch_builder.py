@@ -290,7 +290,15 @@ class LaunchBuilder(LaunchDescription):
                 "topic_tools",
                 "topic_tools::RelayNode",
                 name=f"relay_{friendly_from}_{friendly_to}",
-                parameters={"input_topic": from_, "output_topic": to, "lazy": lazy},
+                parameters={
+                    "input_topic": "in",
+                    "output_topic": "out",
+                    "lazy": lazy,
+                },
+                remappings={
+                    "in": from_,
+                    "out": to,
+                },
             )
 
         if self.in_composable_node_context:
@@ -320,11 +328,15 @@ class LaunchBuilder(LaunchDescription):
                 "topic_tools::ThrottleNode",
                 name=f"throttle_{friendly_topic}_{friendly_rate}_hz",
                 parameters={
-                    "input_topic": topic,
-                    "output_topic": output_topic,
+                    "input_topic": "in",
+                    "output_topic": "out",
                     "lazy": lazy,
                     "throttle_type": "messages",
                     "msgs_per_sec": float(rate),
+                },
+                remappings={
+                    "in": topic,
+                    "out": output_topic,
                 },
             )
 
