@@ -1,3 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clingwrap"
+version = "0.0.0"
+description = "A ROS2 launch wrapper to simplify writing python launch files"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+dependencies = [
+    "launch",
+    "launch_ros",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["clingwrap*"]
+
 [tool.black]
 line-length = 120
 
