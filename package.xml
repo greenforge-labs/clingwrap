@@ -10,10 +10,10 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
-  <depend>rclpy</depend>
   <depend>launch</depend>
   <depend>launch_ros</depend>
-  <depend>topic_tools</depend>
+
+  <exec_depend>topic_tools</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
