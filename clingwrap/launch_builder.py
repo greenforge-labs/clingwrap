@@ -303,7 +303,7 @@ class LaunchBuilder(LaunchDescription):
         friendly_topic = topic.replace("/", "_").strip("_")
         friendly_rate = str(rate).replace(".", "_")
 
-        output_topic = topic + f"/throttled" + ("/hz_{friendly_rate}" if include_hz_in_output_topic else "")
+        output_topic = topic + "/throttled" + (f"/hz_{friendly_rate}" if include_hz_in_output_topic else "")
 
         def create_node():
             self.composable_node(
